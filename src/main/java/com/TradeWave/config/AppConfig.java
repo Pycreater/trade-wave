@@ -14,21 +14,20 @@ public class AppConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-
         http.sessionManagement(management -> management.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(Authorize -> Authorize
+                .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/api/**")
                         .authenticated()
                         .anyRequest()
                         .permitAll())
                 .addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsCofigurationSourse()));
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
 
         return http.build();
     }
 
-    private CorsConfigurationSource corsCofigurationSourse() {
-        return null;
+    private CorsConfigurationSource corsConfigurationSource() {
+        return null; // Implement your CorsConfigurationSource here
     }
 }
