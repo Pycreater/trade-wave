@@ -22,10 +22,12 @@ public class JwtTokenValidator extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String jwt = request.getHeader(JwtConstant.JWT_HEADER);
-        // Bearer ourActualToken
-        // 123456
-        if (jwt != null) {
+
+        if (jwt != null && jwt.startsWith("Bearer ")) {
             jwt = jwt.substring(7);
+        } else {
+            filterChain.doFilter(request, response);
+            return;
         }
 
         try {
@@ -37,8 +39,8 @@ public class JwtTokenValidator extends OncePerRequestFilter {
                     .parseClaimsJws(jwt)
                     .getBody();
 
-            String email = String.valueOf(claims.get("email"));
-            String authorities = String.valueOf(claims.get("authorities"));
+            String email = claims.get("email", String.class);
+            String authorities = claims.get("authorities", String.class);
 
             List<GrantedAuthority> authorityList = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
 
@@ -51,7 +53,9 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
         } catch (Exception e) {
-            throw new RuntimeException("Invalid Token...", e);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("Invalid Token...");
+            return;
         }
 
         filterChain.doFilter(request, response);
